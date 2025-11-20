@@ -11,9 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ThietBi', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::create('ThietBi', function(Blueprint $table){
+            $table->string('maTB',20)->primary();
+            $table->string('maLoai',20);
+            $table->string('tenTB',100)->nullable();
+            $table->string('soSerial',50)->nullable();
+            $table->enum('tinhTrang',['Available','In_Use','Maintenance','Broken','Liquidated'])->default('Available');
+            $table->date('ngayMua')->nullable();
+            $table->date('hanBaoHanh')->nullable();
+
         });
     }
 

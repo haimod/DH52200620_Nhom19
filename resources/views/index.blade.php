@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống Quản lý Tài sản</title>
-        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
     <div class="header">
@@ -57,80 +56,67 @@
                 <h1>Trang chủ</h1>
                 <p>Tổng quan về tình trạng thiết bị và hoạt động mượn trả</p>
             </div>
-<!-- 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Tổng số thiết bị</h3>
-                    <div class="number">124</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Thiết bị khả dụng</h3>
-                    <div class="number" style="color: #28a745;">87</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Đang được mượn</h3>
-                    <div class="number" style="color: #ffc107;">32</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Bảo trì / Hư hỏng</h3>
-                    <div class="number" style="color: #dc3545;">5</div>
-                </div>
-            </div> -->
 
             <div class="card">
                 <div class="card-header">
                     <h2>Danh sách thiết bị</h2>
-                    
                     <div class="card-tools">
                         <div class="search-box">
                             <select class="form-select">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="available">Khả dụng</option>
-                                <option value="in-use">Đang mượn</option>
-                                <option value="maintenance">Bảo trì</option>
+                                <option value="Available">Khả dụng</option>
+                                <option value="In_Use">Đang mượn</option>
+                                <option value="Maintenance">Bảo trì</option>
                             </select>
                         </div>
-
                         <div class="search-box">
                             <input type="text" id="searchInput" placeholder="Tìm theo tên hoặc mã TB..." onkeyup="searchTable()">
                             <span class="search-icon">🔍</span>
                         </div>
-
                         <button class="btn btn-primary">+ Mượn thiết bị</button>
                     </div>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mã thiết bị</th>
-                            <th>Tên thiết bị</th>
-                            <th>Loại</th>
-                            <th>Phòng</th>
-                            <th>Tình trạng</th>
-                            <th>Hạn bảo hành</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>TB001</td>
-                            <td>Laptop Dell Latitude 5420</td>
-                            <td>Laptop</td>
-                            <td>Phòng IT</td>
-                            <td><span class="status-badge status-available">Khả dụng</span></td>
-                            <td>15/08/2025</td>
-                        </tr>
-                     
-                    </tbody>
-                </table>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-             
+                <div class="card-body">
+                    <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th>Mã thiết bị</th>
+                                <th>Tên thiết bị</th>
+                                <th>Loại</th>
+                                <th>Phòng</th>
+                                <th>Tình trạng</th>
+                                <th>Hạn bảo hành</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($thietbi as $tb)
+                            <tr>
+                                <td>{{ $tb->maTB }}</td>
+                                <td>{{ $tb->tenTB }}</td>
+                                <td>{{ $tb->maLoai }}</td>
+                                <td>{{ $tb->maPhong ?? 'Chưa có' }}</td>
+                                <td>
+                                    @if($tb->tinhTrang == 'Available')
+                                        <span class="status-badge status-available">Khả dụng</span>
+                                    @elseif($tb->tinhTrang == 'In_Use')
+                                        <span class="status-badge status-in-use">Đang mượn</span>
+                                    @elseif($tb->tinhTrang == 'Maintenance')
+                                        <span class="status-badge status-maintenance">Bảo trì</span>
+                                    @else
+                                        <span class="status-badge status-broken">{{ $tb->tinhTrang }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($tb->hanBaoHanh)->format('d/m/Y') }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+   
 </body>
 </html>

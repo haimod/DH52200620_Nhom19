@@ -9,7 +9,7 @@ Route::get('/', function () {
 
 Route::get('/',function(){
 $thietBi = DB::table('thietbi')->get();// Lấy tất cả dữ liệu bảng ThietBi
-return view('thietbi',['thietbi' => $thietBi]);// Truyền dữ liệu vào view
+return view('index',['thietbi' => $thietBi]);// Truyền dữ liệu vào view
 
 
 });

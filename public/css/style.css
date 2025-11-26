@@ -64,7 +64,7 @@ body {
 }
 
 /* --- Layout Container --- */
-.container {
+.app-container {
     display: flex;
     height: calc(100vh - 70px);
 }

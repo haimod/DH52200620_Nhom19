@@ -10,8 +10,22 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h2>Danh sách thiết bị</h2>
+            
+            <form action="/" method="GET" style="display: flex; gap: 10px;">
+                <select name="status" style="padding: 5px;" onchange="this.form.submit()">
+                    <option value="all">-- Tất cả --</option>
+                    <option value="Available" {{ $status == 'Available' ? 'selected' : '' }}>Khả dụng</option>
+                    <option value="In_Use" {{ $status == 'In_Use' ? 'selected' : '' }}>Đang mượn</option>
+                    <option value="Maintenance" {{ $status == 'Maintenance' ? 'selected' : '' }}>Bảo trì</option>
+                    <option value="Broken" {{ $status == 'Broken' ? 'selected' : '' }}>Hỏng</option>
+                </select>
+
+                <input type="text" name="keyword" value="{{ $keyword }}" placeholder="Nhập mã hoặc tên..." style="padding: 5px;">
+
+                <button type="submit" style="padding: 5px 10px; cursor: pointer;">Tìm</button>
+            </form>
         </div>
         <div class="card-body">
             <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
@@ -43,7 +57,7 @@
                                     <span class="status-broken">{{ $tb->tinhTrang }}</span>
                                 @endif
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($tb->hanBaoHanh)->format('d/m/Y') }}</td>
+                            <td>{{ $tb->hanBaoHanh ? \Carbon\Carbon::parse($tb->hanBaoHanh)->format('d/m/Y') : '-' }}</td>
                         </tr>
                     @empty
                         <tr>

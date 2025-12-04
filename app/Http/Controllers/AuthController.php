@@ -22,17 +22,15 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        // Thông tin đưa vào Auth::attempt
-        $credentials = [
-            'tenDangNhap' => $request->tenDangNhap,
-            'password' => $request->password
-        ];
+                    // Thông tin đưa vào Auth::attempt
+                if (Auth::attempt([
+                'tenDangNhap' => $request->tenDangNhap,
+                'password' => $request->password
+                ] ) ) {
+                $request->session()->regenerate();
+                return redirect()->intended('/');
+            }
 
-        // Kiểm tra đăng nhập
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended('/'); // hoặc /home
-        }
 
         return back()->withErrors([
             'tenDangNhap' => 'Sai tên đăng nhập hoặc mật khẩu.'

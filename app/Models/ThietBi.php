@@ -32,4 +32,16 @@ class ThietBi extends Model
         return $this->hasOne(ChiTietMuon::class, 'maTB', 'maTB')
             ->latest('id');
     }
+
+    // Thêm vào ThietBi.php
+ // Thêm vào trong class ThietBi
+    public function lichDatTruoc()
+    {
+        // Lấy những phiếu Pending (Đặt trước) của máy này
+        return $this->hasMany(ChiTietMuon::class, 'maTB', 'maTB')
+            ->whereHas('phieuMuon', function($q) {
+                $q->where('trangThai', 'Pending') 
+                  ->where('ngayMuon', '>', now()); // Chỉ tính lịch tương lai
+            });
+    }
 }

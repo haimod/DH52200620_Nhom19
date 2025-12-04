@@ -12,7 +12,7 @@ class HomeController extends Controller
        
         // trả về 1 đối tượng có truy vấn
        // $query = ThietBi::query();
-        $query = ThietBi::with('muonMoiNhat.phieuMuon.user');
+        $query = ThietBi::with('muonMoiNhat.phieuMuon.user', 'lichDatTruoc');
         // Xử lý tìm kiếm từ khóa
         // $request-> là 1 biến hệ thống như _GET[''] hay _POST  nó k phân biệt cách gửi phương thức giống PHP
         // kiểm tra xem có nhận đc keyword từ ô nhập liệu không

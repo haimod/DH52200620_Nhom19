@@ -2,39 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;// dùng thư viện Request
+use App\Models\ThietBi; // 
 
 class HomeController extends Controller
 {
-    // Thêm (Request $request) để nhận dữ liệu từ form tìm kiếm
     public function index(Request $request)
     {
-        // 1. Khởi tạo truy vấn
-        $query = DB::table('thietbi');
-
-        // 2. Xử lý tìm kiếm từ khóa (Nếu có nhập)
+       
+        // trả về 1 đối tượng có truy vấn
+       // $query = ThietBi::query();
+        $query = ThietBi::with('muonMoiNhat.phieuMuon.user');
+        // Xử lý tìm kiếm từ khóa
+        // $request-> là 1 biến hệ thống như _GET[''] hay _POST  nó k phân biệt cách gửi phương thức giống PHP
+        // kiểm tra xem có nhận đc keyword từ ô nhập liệu không
         if ($request->keyword) {
-            $key = $request->keyword;
+            $key = $request->keyword; // gán key = $keyword
+
+
+           
+            // dùng closure(hàm vô danh để truy vấn 
             $query->where(function($q) use ($key) {
-                $q->where('tenTB', 'like', '%' . $key . '%')
+
+                $q->where('tenTB', 'like', '%' . $key . '%')//WHERE (tenTB LIKE '%key%' OR maTB LIKE '%key%')
                   ->orWhere('maTB', 'like', '%' . $key . '%');
             });
         }
 
-        // 3. Xử lý lọc trạng thái (Nếu có chọn)
+        // Xử lý lọc trạng thái
         if ($request->status && $request->status != 'all') {
             $query->where('tinhTrang', $request->status);
         }
 
-        // 4. Lấy dữ liệu cuối cùng
-        $thietbi = $query->get();
-
-        // 5. Trả về View cùng với các biến cần thiết (để không bị lỗi Undefined variable)
+        // 3. Lấy dữ liệu và sắp xếp (Sắp xếp theo mã cho đẹp)
+       // $thietbi = $query->orderBy('maTB', 'asc')->get();
+        $thietbi = $query->orderBy('maTB', 'asc')->paginate(5);
+        // Trả về View
         return view('index', [
             'thietbi' => $thietbi,
-            'keyword' => $request->keyword, // Gửi lại từ khóa để hiện lên ô input
-            'status'  => $request->status   // Gửi lại trạng thái để hiện lên dropdown
+            'keyword' => $request->keyword,
+            'status'  => $request->status
         ]);
     }
 }

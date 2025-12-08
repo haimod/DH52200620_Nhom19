@@ -4,199 +4,279 @@
 
 @section('content')
 <div class="main-content">
-    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
-        <h1>📜 Lịch sử mượn thiết bị</h1>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">📜 Lịch sử mượn trả</h3>
+        
+        <div class="d-flex gap-3">
+            <div class="card border-0 shadow-sm px-3 py-2 d-flex flex-row align-items-center gap-2">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-2 text-primary">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-bold">ĐANG MƯỢN</div>
+                    <div class="h5 mb-0 fw-bold text-primary">{{ $danhSach->where('trangThai', 'Active')->count() }}</div>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm px-3 py-2 d-flex flex-row align-items-center gap-2">
+                <div class="rounded-circle bg-success bg-opacity-10 p-2 text-success">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-bold">ĐÃ TRẢ</div>
+                    <div class="h5 mb-0 fw-bold text-success">{{ $danhSach->where('trangThai', 'Closed')->count() }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- ========================================================== --}}
-    {{-- 1. PHẦN MỚI THÊM: THANH TÌM KIẾM & THỐNG KÊ --}}
-    {{-- ========================================================== --}}
-    <div class="row mb-3">
-        <div class="col-md-5 d-flex align-items-center gap-2">
-            <span class="badge bg-primary p-2">Đang mượn: {{ $danhSach->where('trangThai', 'Active')->count() }}</span>
-            <span class="badge bg-success p-2">Đã trả: {{ $danhSach->where('trangThai', 'Closed')->count() }}</span>
-        </div>
-
-        <div class="col-md-7">
-            <form action="" method="GET" class="d-flex gap-2 justify-content-end">
-                <select name="status" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
-                    <option value="">-- Trạng thái --</option>
-                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Đang mượn</option>
-                    <option value="Closed" {{ request('status') == 'Closed' ? 'selected' : '' }}>Đã trả</option>
-                </select>
-                <div class="input-group input-group-sm" style="width: 250px;">
-                    <input type="text" name="keyword" class="form-control" placeholder="Tìm tên thiết bị..." value="{{ request('keyword') }}">
-                    <button class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body py-3">
+<form action="{{ route('borrow.index') }}" method="GET" class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <div class="input-group input-group-sm">
+                        <!-- SỬA LẠI: Thêm nút submit rõ ràng để bấm được -->
+                        <input type="text" name="keyword" class="form-control" placeholder="Tìm tên thiết bị, ghi chú..." value="{{ request('keyword') }}">
+                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>🔵 Đang mượn</option>
+                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>🟠 Đã đặt trước</option>
+                        <option value="Closed" {{ request('status') == 'Closed' ? 'selected' : '' }}>🟢 Đã trả</option>
+                        <option value="Cancelled" {{ request('status') == 'Cancelled' ? 'selected' : '' }}>⚪ Đã hủy</option>
+                        
+                    </select>
+                </div>
+                <div class="col-md-7 text-end">
+                    @if(request('keyword') || request('status'))
+                        <a href="{{ route('borrow.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Xóa lọc</a>
+                    @endif
                 </div>
             </form>
         </div>
     </div>
-    {{-- ========================================================== --}}
 
-
-    <div class="card">
-        <div class="card-body p-0">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0 table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr>
+                    <tr class="text-secondary small text-uppercase">
                         <th>Mã Phiếu</th>
-                        <th>Thiết bị mượn</th>
+                        <th>Ngày tạo</th>
+                        <th>Thiết bị</th>
+                        <th>Thời gian</th>
                         <th>Trạng thái</th>
-                        <th>Ghi chú</th>
-                        <th>Chi tiết</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($danhSach as $phieu)
-                   
-                    @php
-                        $isQuaHan = false;
-                        // Nếu đang mượn (Active) VÀ Thời gian hiện tại > Ngày trả dự kiến
-                        if($phieu->trangThai == 'Active' && \Carbon\Carbon::now() > \Carbon\Carbon::parse($phieu->ngayTraDuKien)){
-                            $isQuaHan = true;
-                        }
-                    @endphp
+                        @php
+                            $isQuaHan = $phieu->trangThai == 'Active' && \Carbon\Carbon::now() > \Carbon\Carbon::parse($phieu->ngayTraDuKien);
+                            $soLuongTB = $phieu->chiTietMuon->count();
+                            $tbDauTien = $phieu->chiTietMuon->first()->thietbi->tenTB ?? 'Không xác định';
+                        @endphp
 
-                    {{-- Thêm class 'table-danger' (màu đỏ nhạt) nếu quá hạn --}}
-                    <tr class="{{ $isQuaHan ? 'table-danger' : '' }}">
-                        <td>
-                            <span class="fw-bold">#{{ $phieu->maPM }}</span>
-                            {{-- Hiện badge cảnh báo nếu quá hạn --}}
-                            @if($isQuaHan)
-                                <div class="badge bg-danger mt-1" style="font-size: 10px;">Quá hạn</div>
-                            @endif
-                        </td>
+                        <tr class="{{ $isQuaHan ? 'bg-danger bg-opacity-10' : '' }}">
+                            <td>
+                                <span class="fw-bold text-primary">#{{ $phieu->maPM }}</span>
+                            </td>
+                            
+                            <td class="text-muted small">
+                                {{ $phieu->created_at ? $phieu->created_at->format('d/m/Y') : '-' }}
+                            </td>
 
-                        <td>
-                            @foreach($phieu->chiTietMuon as $ct)
-                                <div class="badge bg-light text-dark border mb-1">
-                                    {{ $ct->thietbi->tenTB ?? 'TB đã xóa' }} 
-                                    <small class="text-muted">({{ $ct->maTB }})</small>
-                                </div><br>
-                            @endforeach
-                        </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-box bg-light rounded p-2 me-2">
+                                        <i class="fa-solid fa-laptop text-secondary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ $tbDauTien }}</div>
+                                        @if($soLuongTB > 1)
+                                            <div class="small text-muted">+ {{ $soLuongTB - 1 }} thiết bị khác</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
 
-                        <td>
-                            @if($phieu->trangThai == 'Active')
-                                <span class="badge bg-primary">Đang mượn</span>
-                            @elseif($phieu->trangThai == 'Closed')
-                                <span class="badge bg-success">Đã trả</span>
-                            @else
-                                <span class="badge bg-secondary">{{ $phieu->trangThai }}</span>
-                            @endif
-                        </td>
+                            <td>
+                                <div class="small">
+                                    <div><i class="fa-solid fa-arrow-right-to-bracket text-success me-1"></i> {{ \Carbon\Carbon::parse($phieu->ngayMuon)->format('H:i d/m/Y') }}</div>
+                                    <div class="{{ $isQuaHan ? 'text-danger fw-bold' : 'text-muted' }}">
+                                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> {{ \Carbon\Carbon::parse($phieu->ngayTraDuKien)->format('H:i d/m/Y') }}
+                                        @if($isQuaHan) <span class="badge bg-danger ms-1">Quá hạn</span> @endif
+                                    </div>
+                                </div>
+                            </td>
 
-                        <td>{{ $phieu->ghiChu ?? '-' }}</td>
+                            <td>
+                                @if($phieu->trangThai == 'Active')
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Đang mượn</span>
+                                @elseif($phieu->trangThai == 'Pending')
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Đã đặt trước</span>
+                                @elseif($phieu->trangThai == 'Closed')
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Đã trả</span>
+                                @else
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">{{ $phieu->trangThai }}</span>
+                                @endif
+                            </td>
 
-                        {{-- NÚT CHI TIẾT (GIỮ NGUYÊN CODE CŨ CỦA BẠN) --}}
-                        <td>
-                            <button 
-                                class="btn btn-sm btn-info text-white"
-                                onclick="openModalFromButton(this)"
-
-                                data-ma="{{ $phieu->maPM }}"
-                                data-muon="{{ \Carbon\Carbon::parse($phieu->ngayMuon)->format('H:i d/m/Y') }}"
-                                data-tra="{{ \Carbon\Carbon::parse($phieu->ngayTraDuKien)->format('H:i d/m/Y') }}"
-                                data-status="{{ $phieu->trangThai }}"
-                                data-note="{{ $phieu->ghiChu ?? '-' }}"
-
-                                data-thietbi="
-                                    @foreach($phieu->chiTietMuon as $ct)
-                                        {{ $ct->thietbi->tenTB ?? 'TB đã xóa' }} ({{ $ct->maTB }})<br>
-                                    @endforeach
-                                "
-                            >
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-
+                            <td class="text-end">
+                                <button 
+                                    class="btn btn-sm btn-light border" 
+                                    onclick="openDetailModal(this)"
+                                    data-phieu='@json($phieu)'
+                                    title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye text-secondary"></i>
+                                </button>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-box-open fa-2x mb-2"></i>
-                            <p>Không tìm thấy phiếu mượn nào.</p>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-box-open fa-2x mb-3 opacity-50"></i>
+                                <p class="mb-0">Chưa có lịch sử mượn trả nào.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         
-        <div class="card-footer d-flex justify-content-center">
-            {{-- Giữ nguyên phân trang và thêm appends để giữ bộ lọc khi qua trang 2 --}}
+        <div class="card-footer bg-white border-top-0 py-3 d-flex justify-content-center">
             {{ $danhSach->withQueryString()->links() }}
         </div>
     </div>
 </div>
 
-{{-- ========== MODAL CHI TIẾT PHIẾU (GIỮ NGUYÊN) ========== --}}
 <div id="detailModal" class="modal">
-    <div class="modal-content" style="width: 500px;">
-        <span class="close" onclick="closeDetailModal()">&times;</span>
-        <h3 class="mb-3 text-primary"><i class="fa-solid fa-circle-info"></i> Chi tiết phiếu</h3>
-
-        <div class="alert alert-light border">
-            <div class="d-flex justify-content-between">
-                <p><strong>Mã phiếu:</strong> <span id="d_ma" class="fw-bold"></span></p>
-                <p><span id="d_trangthai"></span></p>
-            </div>
-            <hr class="my-2">
-            <p><strong>Ngày mượn:</strong> <span id="d_muon"></span></p>
-            <p><strong>Ngày trả dự kiến:</strong> <span id="d_tra" class="text-danger fw-bold"></span></p>
-
-            <p class="mt-2"><strong>Thiết bị mượn:</strong></p>
-            <div id="d_tb" class="ms-3 p-2 bg-light rounded border"></div>
-
-            <p class="mt-3"><strong>Ghi chú:</strong></p>
-            <p id="d_note" class="ms-3 fst-italic text-muted"></p>
+    <div class="modal-content border-0 shadow-lg" style="width: 500px;">
+        <span class="close position-absolute top-0 end-0 p-3 fs-4" onclick="closeDetailModal()" style="cursor: pointer;">&times;</span>
+        
+        <div class="text-center mb-4">
+            <h4 class="fw-bold text-primary">Chi tiết phiếu mượn</h4>
+            <div id="d_status_badge" class="mt-2"></div>
         </div>
 
-        <button class="btn btn-secondary w-100 mt-2" onclick="closeDetailModal()">Đóng</button>
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <div class="p-3 bg-light rounded border">
+                    <small class="text-muted d-block text-uppercase">Mã phiếu</small>
+                    <span class="fw-bold fs-5" id="d_ma">...</span>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-3 bg-light rounded border">
+                    <small class="text-muted d-block text-uppercase">Ngày tạo</small>
+                    <span class="fw-bold" id="d_created">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="small text-muted text-uppercase fw-bold mb-2">Thời gian</label>
+            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                <span><i class="fa-regular fa-clock me-2 text-success"></i>Bắt đầu:</span>
+                <span class="fw-bold" id="d_muon">...</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                <span><i class="fa-regular fa-clock me-2 text-danger"></i>Kết thúc:</span>
+                <span class="fw-bold" id="d_tra">...</span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="small text-muted text-uppercase fw-bold mb-2">Danh sách thiết bị</label>
+            <ul id="d_list_tb" class="list-group">
+                </ul>
+        </div>
+
+        <div class="mb-3">
+            <label class="small text-muted text-uppercase fw-bold">Ghi chú</label>
+            <p id="d_note" class="fst-italic text-secondary bg-light p-2 rounded">Không có ghi chú</p>
+        </div>
+
+        <button class="btn btn-secondary w-100" onclick="closeDetailModal()">Đóng</button>
     </div>
 </div>
 
-
-{{-- ===== CSS MODAL (GIỮ NGUYÊN) ===== --}}
 <style>
-    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
-        justify-content:center; align-items:center; z-index:9999; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999; }
     .modal-content { background:#fff; padding:25px; border-radius:10px; position:relative; animation:fadeIn .2s; }
-    .modal .close { position:absolute; top:10px; right:15px; cursor:pointer; font-size:24px; color:#999; }
-    .modal .close:hover { color:#333; }
     @keyframes fadeIn { from{opacity:0; transform:scale(.9);} to{opacity:1; transform:scale(1);} }
 </style>
 
-
-{{-- ===== JS MODAL (GIỮ NGUYÊN) ===== --}}
+@section('scripts')
 <script>
-function openModalFromButton(btn) {
-    document.getElementById("d_ma").innerText = btn.dataset.ma;
-    document.getElementById("d_muon").innerText = btn.dataset.muon;
-    document.getElementById("d_tra").innerText = btn.dataset.tra;
-    document.getElementById("d_note").innerText = btn.dataset.note;
+    // Hàm mở modal chi tiết
+    function openDetailModal(el) {
+        // Lấy dữ liệu
+        let phieu = JSON.parse(el.getAttribute('data-phieu'));
 
-    document.getElementById("d_tb").innerHTML = btn.dataset.thietbi;
+        document.getElementById("d_ma").innerText = '#' + phieu.maPM; // Nếu cột DB là maPM
+        // Hoặc nếu dùng UUID hiển thị ngắn: '#' + phieu.id.substring(0, 8);
+        
+        document.getElementById("d_created").innerText = new Date(phieu.created_at).toLocaleDateString('vi-VN');
+        
+        // Format ngày giờ
+        let start = new Date(phieu.ngayMuon).toLocaleString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric'});
+        let end = new Date(phieu.ngayTraDuKien).toLocaleString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric'});
+        
+        document.getElementById("d_muon").innerText = start;
+        document.getElementById("d_tra").innerText = end;
+        document.getElementById("d_note").innerText = phieu.ghiChu || 'Không có ghi chú';
 
-    // trạng thái
-    let tt = btn.dataset.status;
-    let html = "";
-    if (tt === "Active") html = '<span class="badge bg-primary">Đang mượn</span>';
-    else if (tt === "Closed") html = '<span class="badge bg-success">Đã trả</span>';
-    else html = '<span class="badge bg-secondary">'+tt+'</span>';
+        // Render trạng thái
+        let statusHtml = '';
+        if(phieu.trangThai == 'Active') statusHtml = '<span class="badge bg-primary px-3 py-2">Đang mượn</span>';
+        else if(phieu.trangThai == 'Pending') statusHtml = '<span class="badge bg-warning text-dark px-3 py-2">Đã đặt trước</span>';
+        else if(phieu.trangThai == 'Closed') statusHtml = '<span class="badge bg-success px-3 py-2">Đã hoàn thành</span>';
+        else statusHtml = '<span class="badge bg-secondary px-3 py-2">'+phieu.trangThai+'</span>';
+        document.getElementById("d_status_badge").innerHTML = statusHtml;
 
-    document.getElementById("d_trangthai").innerHTML = html;
+        // --- PHẦN SỬA LỖI UNDEFINED ---
+        let listHtml = '';
+        // Lưu ý: Laravel convert quan hệ 'chiTietMuon' thành 'chi_tiet_muon' trong JSON
+        if(phieu.chi_tiet_muon && phieu.chi_tiet_muon.length > 0) {
+            phieu.chi_tiet_muon.forEach(ct => {
+                // 1. Sửa 'ct.thietbi' thành 'ct.thiet_bi' (snake_case)
+                let thietBi = ct.thiet_bi; 
+                let tenTB = thietBi ? thietBi.tenTB : 'Thiết bị đã xóa';
+                // 2. Lấy mã TB từ đối tượng thietBi, không lấy trực tiếp từ ct
+                let maTB = thietBi ? thietBi.maTB : 'N/A';
 
-    document.getElementById("detailModal").style.display = "flex";
-}
+                listHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fa-solid fa-laptop me-2 text-secondary"></i>
+                            <span class="fw-bold">${tenTB}</span>
+                        </div>
+                        <span class="badge bg-light text-dark border">${maTB}</span>
+                    </li>
+                `;
+            });
+        } else {
+            listHtml = '<li class="list-group-item text-center text-muted">Không có dữ liệu thiết bị</li>';
+        }
+        document.getElementById("d_list_tb").innerHTML = listHtml;
 
-function closeDetailModal() {
-    document.getElementById("detailModal").style.display = "none";
-}
+        document.getElementById("detailModal").style.display = "flex";
+    }
 
-window.onclick = function(e) {
-    if (e.target.id === "detailModal") closeDetailModal();
-}
+    function closeDetailModal() {
+        document.getElementById("detailModal").style.display = "none";
+    }
+
+    window.onclick = function(e) {
+        if (e.target.id === "detailModal") closeDetailModal();
+    }
 </script>
+@endsection
 
 @endsection

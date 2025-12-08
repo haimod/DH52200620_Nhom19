@@ -111,7 +111,7 @@
             <a href="{{ route('return.index') }}" 
             class="sidebar-item {{ request()->routeIs('return.index') ? 'active' : '' }}"
             style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                <i class="fa-solid fa-rotate-left me-2"></i> 
+            <i class="fa-solid fa-upload"></i>
                 Trả thiết bị
             </a>
 

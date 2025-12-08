@@ -5,6 +5,7 @@
 @section('content')
 <div class="main-content">
 
+    <!-- Banner Chào mừng -->
     <div class="welcome-banner mb-4 p-4 rounded-3 shadow-sm d-flex justify-content-between align-items-center bg-white">
         <div>
             <h4 class="mb-1 fw-bold text-primary">Xin chào, {{ Auth::user()->hoTen ?? 'Nhân viên' }}! 👋</h4>
@@ -21,11 +22,13 @@
         </div>
     </div>
 
+    <!-- Danh sách thiết bị -->
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 border-bottom-0">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-ul me-2"></i>Danh sách thiết bị</h5>
                 
+                <!-- Bộ lọc & Tìm kiếm -->
                 <form action="/" method="GET" class="d-flex gap-2 flex-wrap flex-grow-1 justify-content-end">
                     <select name="status" class="form-select form-select-sm" style="max-width: 150px;" onchange="this.form.submit()">
                         <option value="all">-- Trạng thái --</option>
@@ -100,20 +103,21 @@
                             @if($tb->tinhTrang == 'Available')
                                 <button class="btn btn-primary btn-sm px-3 shadow-sm borrow-btn" 
                                     data-matb="{{ $tb->maTB }}" 
-                                    data-tentb="{{ $tb->tenTB }}">
+                                    data-tentb="{{ $tb->tenTB }}"
+                                    data-uuid="{{ $tb->id }}"> 
                                     Mượn ngay
                                 </button>
                             @elseif($tb->tinhTrang == 'In_Use')
                                 @php
                                     $phieu = $tb->muonMoiNhat->phieuMuon ?? null;
                                     $ngayTraDisplay = $phieu ? \Carbon\Carbon::parse($phieu->ngayTraDuKien)->format('H:i d/m/Y') : 'Chưa rõ';
-                                    // Fix lỗi format ISO cho JS
                                     $ngayTraISO = $phieu ? \Carbon\Carbon::parse($phieu->ngayTraDuKien)->format('Y-m-d\TH:i:s') : '';
                                     $nguoiMuon = $phieu && $phieu->user ? $phieu->user->hoTen : 'Ai đó';
                                 @endphp
                                 <button class="btn btn-outline-warning text-dark btn-sm px-3 info-btn" 
                                     data-matb="{{ $tb->maTB }}" 
                                     data-tentb="{{ $tb->tenTB }}" 
+                                    data-uuid="{{ $tb->id }}" 
                                     data-nguoimuon="{{ $nguoiMuon }}" 
                                     data-ngaytra="{{ $ngayTraDisplay }}"
                                     data-ngaytra-iso="{{ $ngayTraISO }}">
@@ -144,6 +148,7 @@
     </div>
 </div>
 
+<!-- TOAST THÔNG BÁO -->
 @if(session('success'))
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div class="toast show bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
@@ -170,6 +175,7 @@
 </div>
 @endif
 
+<!-- MODAL 1: ĐĂNG KÝ MƯỢN -->
 <div id="borrowModal" class="modal">
     <div class="modal-content shadow-lg border-0" style="max-width: 450px;">
         <span class="close position-absolute top-0 end-0 p-3 fs-4" style="cursor: pointer;">&times;</span>
@@ -184,7 +190,8 @@
 
         <form action="{{ route('borrow.store') }}" method="POST">
             @csrf
-            <input type="hidden" name="thietbi" id="modalMaTB">
+            <!-- QUAN TRỌNG: Đổi name='thietbi' thành name='thiet_bi_id' để gửi UUID -->
+            <input type="hidden" name="thiet_bi_id" id="modalThietBiId">
             
             <div class="mb-3 p-3 bg-warning-subtle rounded border border-warning-subtle">
                 <h6 class="fw-bold small text-warning-emphasis mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Chú ý các khung giờ đã có người đặt:</h6>
@@ -206,9 +213,9 @@
 
             <div class="mb-3">
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setQuickTime(1)">+1 Giờ</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setQuickTime(2)">+2 Giờ</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setQuickTime(4)">+4 Giờ</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setQuickTime(24)">+1 Ngày</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setQuickTime(48)">+2 Ngày</button>
                 </div>
             </div>
 
@@ -224,6 +231,7 @@
     </div>
 </div>
 
+<!-- MODAL 2: THÔNG TIN & ĐẶT LỊCH -->
 <div id="infoModal" class="modal">
     <div class="modal-content border-0 shadow-lg" style="max-width: 450px;">
         <span class="close position-absolute top-0 end-0 p-3 fs-4" style="cursor: pointer;">&times;</span>
@@ -255,7 +263,8 @@
 
         <form action="{{ route('borrow.store') }}" method="POST">
             @csrf
-            <input type="hidden" name="thietbi" id="infoMaTB">
+            <!-- QUAN TRỌNG: Đổi name='thietbi' thành name='thiet_bi_id' -->
+            <input type="hidden" name="thiet_bi_id" id="infoThietBiId">
             
             <div class="mb-3">
                 <label class="fw-bold small">📅 Chọn thời gian bạn muốn đặt:</label>
@@ -300,7 +309,7 @@
         endInput.value = localEndTime.toISOString().slice(0, 16);
     }
 
-    // HÀM GỌI API LỊCH CHUNG (Dùng cho cả 2 modal)
+    // HÀM GỌI API LỊCH (Vẫn dùng Mã TB để hiển thị lịch dễ hơn)
     function fetchSchedule(maTB, listElementId) {
         let listContainer = document.getElementById(listElementId);
         listContainer.innerHTML = '<li class="list-group-item bg-transparent text-center"><div class="spinner-border spinner-border-sm text-secondary"></div></li>';
@@ -345,12 +354,16 @@
         // --- 1. XỬ LÝ NÚT XANH (MƯỢN NGAY) ---
         document.querySelectorAll('.borrow-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                let maTB = this.dataset.matb;
-                document.getElementById('modalMaTB').value = maTB;
+                let uuid = this.dataset.uuid; // Lấy UUID từ data attribute
+                let maTB = this.dataset.matb; // Lấy Mã hiển thị
+                
+                // Điền UUID vào hidden input (để gửi lên server)
+                document.getElementById('modalThietBiId').value = uuid; 
+                
                 document.getElementById('modalTenTB').innerText = this.dataset.tentb;
                 document.getElementById('ngayTraDuKien').value = ''; 
 
-                // GỌI API LỊCH CHO NÚT XANH LUÔN
+                // Vẫn dùng mã TB để gọi API lịch (vì API chưa chắc đã đổi)
                 fetchSchedule(maTB, 'borrowScheduleList');
 
                 borrowModal.style.display = 'flex';
@@ -360,16 +373,19 @@
         // --- 2. XỬ LÝ NÚT VÀNG (XEM & ĐẶT LỊCH) ---
         document.querySelectorAll('.info-btn').forEach(btn => {
             btn.addEventListener('click', function() {
+                let uuid = this.dataset.uuid; // Lấy UUID
                 let maTB = this.dataset.matb;
-                document.getElementById('infoMaTB').value = maTB;
+
+                // Điền UUID vào hidden input
+                document.getElementById('infoThietBiId').value = uuid;
+                
                 document.getElementById('infoTenTB').innerText = this.dataset.tentb;
                 document.getElementById('infoNguoiMuon').innerText = this.dataset.nguoimuon;
                 document.getElementById('infoNgayTra').innerText = this.dataset.ngaytra;
 
-                // GỌI API LỊCH CHO NÚT VÀNG
                 fetchSchedule(maTB, 'infoScheduleList');
 
-                // Auto-fill Logic (như cũ)
+                // Auto-fill Logic
                 try {
                     let rawDate = this.dataset.ngaytraIso; 
                     if (rawDate) {

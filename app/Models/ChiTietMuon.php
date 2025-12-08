@@ -4,29 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class ChiTietMuon extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $table = 'chi_tiet_muon';
-    public $timestamps = false; // Nếu bảng không có created_at, updated_at
 
     protected $fillable = [
-        'maPM',
-        'maTB',
+        'phieu_muon_id', // Khóa ngoại
+        'thiet_bi_id',   // Khóa ngoại
         'soLuongMuon',
     ];
 
-    // Quan hệ đến phiếu mượn
+    // --- MỐI QUAN HỆ ---
+
     public function phieuMuon()
     {
-        return $this->belongsTo(PhieuMuon::class, 'maPM', 'maPM');
+        return $this->belongsTo(PhieuMuon::class);
     }
 
-    // Quan hệ đến thiết bị
     public function thietBi()
     {
-        return $this->belongsTo(ThietBi::class, 'maTB', 'maTB');
+        // Lưu ý: Model tên là ThietBi, nên belongsTo này vẫn đúng
+        return $this->belongsTo(ThietBi::class);
     }
 }

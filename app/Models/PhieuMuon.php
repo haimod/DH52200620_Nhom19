@@ -4,37 +4,36 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Concerns\HasUuids; // 1. Import UUID
 
 class PhieuMuon extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids; // 2. Kích hoạt UUID
 
     protected $table = 'phieu_muon';
-    protected $primaryKey = 'maPM';
-    public $incrementing = true;
-
-    public $timestamps = false; // nếu bảng không có created_at, updated_at
 
     protected $fillable = [
-        'maNV',
+        'maPM',      // Mã hiển thị (VD: PM-001)
+        'user_id',   // KHÓA NGOẠI: Liên kết với bảng users
         'ngayMuon',
         'ngayTraDuKien',
         'ghiChu',
         'trangThai'
     ];
 
-    // Quan hệ tới người mượn (User)
+    // --- QUAN HỆ ---
+
+    // 1. Phiếu này thuộc về 1 User
     public function user()
     {
-        return $this->belongsTo(User::class, 'maNV', 'maNV');
+        // Mặc định Laravel tìm cột 'user_id' trong bảng phieu_muon -> Chính xác
+        return $this->belongsTo(User::class);
     }
 
-    // Quan hệ tới chi tiết mượn
+    // 2. Phiếu này có nhiều chi tiết (mượn nhiều máy 1 lúc)
     public function chiTietMuon()
     {
-        return $this->hasMany(ChiTietMuon::class, 'maPM', 'maPM');
+        // Mặc định Laravel tìm cột 'phieu_muon_id' trong bảng chi_tiet_muon
+        return $this->hasMany(ChiTietMuon::class);
     }
-
-    
 }

@@ -4,44 +4,50 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids; // 1. Import UUID
 
 class ThietBi extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids; // 2. Kích hoạt UUID
 
-    protected $table = 'thietbi';
-    protected $primaryKey = 'maTB';
-    public $incrementing = false;
-    protected $keyType = 'string';
-    public $timestamps = false;
+    protected $table = 'ThietBi'; // Lưu ý chữ hoa thường phải khớp DB
+    
+    // Mặc định timestamps là true (nên dùng để theo dõi ngày tạo)
+    public $timestamps = true; 
 
     protected $fillable = [
-        'maTB', 'tenTB', 'maLoai', 'maPhong',
-        'tinhTrang', 'hanBaoHanh', 'soSerial', 'ngayMua'
+        'maTB', // Mã hiển thị (QR Code)
+        'tenTB', 
+        'maLoai', 
+        'maPhong',
+        'tinhTrang', 
+        'hanBaoHanh', 
+        'soSerial', 
+        'ngayMua'
     ];
 
-    // Quan hệ: nhiều chi tiết mượn
+    // --- QUAN HỆ ---
+
+    // 1. Một thiết bị có nhiều dòng chi tiết mượn (Lịch sử mượn)
     public function chiTietMuon()
     {
-        return $this->hasMany(ChiTietMuon::class, 'maTB', 'maTB');
+        // Laravel tự hiểu khóa ngoại là 'thiet_bi_id' dựa trên tên Model
+        return $this->hasMany(ChiTietMuon::class);
     }
 
-    // Quan hệ: lấy phiếu mượn mới nhất
+    // 2. Lấy người đang mượn máy này (Thông qua chi tiết mượn mới nhất)
     public function muonMoiNhat()
     {
-        return $this->hasOne(ChiTietMuon::class, 'maTB', 'maTB')
-            ->latest('id');
+        return $this->hasOne(ChiTietMuon::class)->latest('id');
     }
 
-    // Thêm vào ThietBi.php
- // Thêm vào trong class ThietBi
+    // 3. Lịch đặt trước (Logic phức tạp hơn chút vì phải chọc qua bảng PhieuMuon)
     public function lichDatTruoc()
     {
-        // Lấy những phiếu Pending (Đặt trước) của máy này
-        return $this->hasMany(ChiTietMuon::class, 'maTB', 'maTB')
+        return $this->hasMany(ChiTietMuon::class)
             ->whereHas('phieuMuon', function($q) {
-                $q->where('trangThai', 'Pending') 
-                  ->where('ngayMuon', '>', now()); // Chỉ tính lịch tương lai
+                $q->where('trangThai', 'Pending') // Hoặc 'ChoDuyet' tùy enum của bạn
+                  ->where('ngayMuon', '>', now());
             });
     }
 }

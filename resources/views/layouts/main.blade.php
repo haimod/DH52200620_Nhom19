@@ -69,9 +69,16 @@
         <div class="header-right" style="display: flex; align-items: center; gap: 15px;">
             
             <div class="user-info" style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
-                    {{ substr(Auth::user()->hoTen ?? 'U', 0, 1) }}
-                </div>
+                <!-- ĐÃ SỬA: Logic hiển thị Avatar trên Header -->
+                @if(Auth::user()->avatar)
+                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
+                         alt="Avatar" 
+                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;">
+                @else
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
+                        {{ substr(Auth::user()->hoTen ?? Auth::user()->name ?? 'U', 0, 1) }}
+                    </div>
+                @endif
 
                 <div style="display: flex; flex-direction: column; line-height: 1.3;">
                     <span style="font-weight: bold; font-size: 14px; color: #333;">
@@ -115,13 +122,17 @@
                 Trả thiết bị
             </a>
 
-            <div class="sidebar-item">
-                <i class="fa-solid fa-clock-rotate-left me-2"></i> Hỗ trợ
-            </div>
+                 <a href="{{ route('support.index') }}" 
+                class="sidebar-item {{ request()->routeIs('support.*') ? 'active' : '' }}"
+                style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                    <i class="fa-solid fa-headset me-2"></i> Hỗ trợ & Trợ giúp
+                </a>
             
-            <div class="sidebar-item">
+            <a href="{{ route('settings.index') }}" 
+               class="sidebar-item {{ request()->routeIs('settings.*') ? 'active' : '' }}"
+               style="text-decoration: none; color: inherit; display: flex; align-items: center;">
                 <i class="fa-solid fa-gear me-2"></i> Cài đặt
-            </div>
+            </a>
     </div>
 
         <div class="main-content">

@@ -3,7 +3,9 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BorrowController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SupportController;
 
 // --- Đăng nhập / Đăng xuất ---
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -30,4 +32,23 @@ Route::middleware(['auth'])->group(function () {
 
     // 6. Xử lý Trả / Hủy / Nhận máy
     Route::post('/return-action/{id}', [BorrowController::class, 'action'])->name('return.action');
+
+
+    
+    // Hiển thị trang cài đặt (gọi hàm index)
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    // Xử lý cập nhật thông tin cá nhân (gọi hàm updateProfile)
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.updateProfile');
+    // Xử lý đổi mật khẩu (gọi hàm changePassword)
+    Route::post('/settings/password', [SettingsController::class, 'changePassword'])->name('settings.changePassword');
+
+
+        
+
+       Route::get('/ho-tro', [SupportController::class, 'index'])->name('support.index');
+Route::post('/ho-tro/gui', [SupportController::class, 'sendRequest'])->name('support.send');
+Route::post('/ho-tro/tra-loi', [SupportController::class, 'sendMessage'])->name('support.reply');
+
+
+
 });

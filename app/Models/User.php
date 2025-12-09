@@ -25,6 +25,7 @@ protected $keyType = 'string';
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**

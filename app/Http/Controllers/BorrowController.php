@@ -12,24 +12,22 @@ use Carbon\Carbon;
 
 class BorrowController extends Controller
 {
-    // 1. API Lấy lịch bận (Cho Modal hiển thị lịch)
-    // Input: $maTB (String hiển thị - VD: "LT-001") từ Javascript gửi lên
+    // 1. API Lấy lịch bận (Giữ nguyên để hiển thị cho User biết giờ nào bận)
     public function getSchedule($maTB)
     {
-        // Tìm thiết bị theo mã hiển thị để lấy UUID thực
         $device = ThietBi::where('maTB', $maTB)->first();
 
         if (!$device) {
             return response()->json([]);
         }
 
-        // Truy vấn qua Relationship: Tìm các phiếu mượn có chứa thiết bị này
         $schedules = PhieuMuon::whereHas('chiTietMuon', function ($q) use ($device) {
-                $q->where('thiet_bi_id', $device->id); // So sánh UUID
+                $q->where('thiet_bi_id', $device->id);
             })
-            ->whereIn('trangThai', ['Active', 'Pending']) // Chỉ lấy đơn đang chạy hoặc chờ
-            ->where('ngayTraDuKien', '>=', now()) // Lấy lịch tương lai
-            ->with('user') // Eager load user để lấy tên
+            // Lấy cả đơn đang chờ duyệt để User biết mà tránh
+            ->whereIn('trangThai', ['Active', 'Pending']) 
+            ->where('ngayTraDuKien', '>=', now())
+            ->with('user')
             ->orderBy('ngayMuon', 'asc')
             ->get()
             ->map(function ($phieu) {
@@ -44,12 +42,11 @@ class BorrowController extends Controller
         return response()->json($schedules);
     }
 
-    // 2. Xử lý Mượn / Đặt lịch (Lưu vào DB)
+    // 2. XỬ LÝ MƯỢN / ĐẶT LỊCH (SỬA ĐỔI LOGIC DUYỆT)
     public function store(Request $request)
     {
         $request->validate([
-            // Quan trọng: Validate thiet_bi_id là UUID tồn tại trong bảng ThietBi
-            'thiet_bi_id' => 'required|exists:ThietBi,id', 
+            'thiet_bi_id' => 'required|exists:thietbi,id', // Lưu ý: Tên bảng trong DB là 'thietbi' (theo các bước trước)
             'ngayMuon' => 'required|date',
             'ngayTraDuKien' => 'required|date',
             'lyDo' => 'nullable|string|max:255',
@@ -57,92 +54,75 @@ class BorrowController extends Controller
 
         $start = Carbon::parse($request->ngayMuon);
         $end = Carbon::parse($request->ngayTraDuKien);
-        $thietBiId = $request->thiet_bi_id; // Đây là UUID
+        $thietBiId = $request->thiet_bi_id;
 
-   // 🔥 A. TỰ KIỂM TRA NGÀY MƯỢN KHÔNG ĐƯỢC QUÁ KHỨ
-
-                $now = Carbon::now()->subMinutes(5);
+        // A. Validate thời gian
+        $now = Carbon::now()->subMinutes(5);
         if ($start->lt($now)) {
             return back()->with('error', '⛔ Thời gian mượn không được nằm trong quá khứ!');
         }
 
-
         if ($end->lessThanOrEqualTo($start)) {
-    return back()->with('error', '⛔ Ngày trả phải lớn hơn ngày mượn!');
-}
-                // C. Giới hạn thời gian mượn tối đa 4 giờ
-        $diffHours = $start->diffInHours($end);
-
-        if ($diffHours > 4) {
-            return back()->with('error', '⛔ Bạn chỉ được mượn/đặt lịch thiết bị tối đa 4 giờ!');
+            return back()->with('error', '⛔ Ngày trả phải lớn hơn ngày mượn!');
         }
-        // A. Kiểm tra trùng lịch
-        // Logic: Tìm xem có phiếu nào chứa thiết bị này mà thời gian bị chồng chéo không
+
+        // B. Kiểm tra trùng lịch (Vẫn giữ để User không đặt chồng lên nhau)
         $conflict = PhieuMuon::whereHas('chiTietMuon', function ($q) use ($thietBiId) {
                 $q->where('thiet_bi_id', $thietBiId);
             })
-            ->whereIn('trangThai', ['Active', 'Pending'])
+            ->whereIn('trangThai', ['Active', 'Pending']) // Check cả đơn đã duyệt và đang chờ
             ->where(function ($query) use ($start, $end) {
-                // Công thức trùng lịch: (StartA < EndB) và (EndA > StartB)
                 $query->where('ngayMuon', '<', $end)
                       ->where('ngayTraDuKien', '>', $start);
             })
             ->exists();
 
         if ($conflict) {
-            return back()->with('error', '❌ Khoảng thời gian này đã có người khác đặt rồi! Vui lòng chọn giờ khác.');
+            return back()->with('error', '❌ Khoảng thời gian này đã có người khác đặt hoặc đang chờ duyệt! Vui lòng chọn giờ khác.');
         }
 
-        // B. Tính toán trạng thái
-        // Nếu mượn ngay bây giờ (sai số 5 phút) -> Active. Nếu tương lai -> Pending
-        $isBorrowNow = $start <= now()->addMinutes(5);
-        $status = $isBorrowNow ? 'Active' : 'Pending';
+        // --- SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY ---
+        // Bất kể đặt bây giờ hay tương lai, trạng thái luôn là PENDING để Admin duyệt
+        $status = 'Pending'; 
 
         try {
             DB::transaction(function () use ($request, $start, $end, $status, $thietBiId) {
-                // 1. Tạo phiếu (Bảng Cha)
+                // 1. Tạo phiếu
                 $phieuMuon = PhieuMuon::create([
-                    'maPM' => 'PM-' . strtoupper(uniqid()), // Sinh mã hiển thị
-                    'user_id' => Auth::id(), // QUAN TRỌNG: Lưu UUID của User
+                    'maPM' => 'PM-' . strtoupper(uniqid()),
+                    'user_id' => Auth::id(),
                     'ngayMuon' => $start,
                     'ngayTraDuKien' => $end,
                     'ghiChu' => $request->lyDo,
-                    'trangThai' => $status,
+                    'trangThai' => $status, // Luôn là Pending
                 ]);
 
-                // 2. Lưu chi tiết (Bảng Con)
+                // 2. Tạo chi tiết
                 ChiTietMuon::create([
-                    'phieu_muon_id' => $phieuMuon->id, // UUID phiếu
-                    'thiet_bi_id' => $thietBiId,       // UUID thiết bị
+                    'phieu_muon_id' => $phieuMuon->id,
+                    'thiet_bi_id' => $thietBiId,
                     'soLuongMuon' => 1,
                 ]);
 
-                // 3. Cập nhật trạng thái thiết bị
-                // Chỉ cập nhật thành In_Use nếu là mượn ngay (Active)
-                if ($status == 'Active') {
-                    ThietBi::where('id', $thietBiId)->update(['tinhTrang' => 'In_Use']);
-                }
+                // 3. KHÔNG CẬP NHẬT TRẠNG THÁI THIẾT BỊ NỮA
+                // Việc set 'In_Use' sẽ do Admin làm khi bấm nút "Duyệt"
             });
 
-            $msg = $status == 'Active' ? '✅ Mượn thiết bị thành công!' : '📅 Đặt lịch thành công! Vui lòng đến lấy máy đúng giờ.';
-            return back()->with('success', $msg);
+            return back()->with('success', '✅ Yêu cầu mượn đã được gửi! Vui lòng chờ Admin phê duyệt.');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Lỗi hệ thống: ' . $e->getMessage());
         }
     }
 
-    // 3. Xem danh sách lịch sử mượn
+    // 3. Xem danh sách lịch sử mượn (Giữ nguyên)
     public function index(Request $request)
     {
-        // Lấy phiếu của User đang đăng nhập (so khớp user_id = Auth::id())
         $query = PhieuMuon::where('user_id', Auth::id())
-            ->with('chiTietMuon.thietBi'); // Eager load để lấy thông tin thiết bị
+            ->with('chiTietMuon.thietBi');
 
-        // Lọc theo keyword (tên hoặc Ghi chú)
-            if ($request->filled('keyword')) {
+        if ($request->filled('keyword')) {
             $key = $request->keyword;
-
             $query->where(function ($q) use ($key) {
                 $q->where('ghiChu', 'like', "%$key%")
                 ->orWhereHas('chiTietMuon.thietBi', function ($q2) use ($key) {
@@ -151,80 +131,57 @@ class BorrowController extends Controller
             });
         }
 
-        // Lọc theo trạng thái
         if ($request->filled('status')) {
             $query->where('trangThai', $request->status);
         }
 
         $danhSach = $query
-            ->orderBy('ngayMuon', 'desc')
+            ->orderBy('created_at', 'desc') // Sắp xếp theo ngày tạo mới nhất
             ->paginate(10)
             ->withQueryString();
 
         return view('borrow.index', compact('danhSach'));
     }
 
-    // 4. Danh sách thiết bị đang mượn (để trả)
+    // 4. Danh sách đang mượn để trả (Sửa query lấy Active)
     public function returnIndex(Request $request)
     {
+        // Chỉ lấy những phiếu đang Active (Đã duyệt) để user bấm trả
         $query = PhieuMuon::where('user_id', Auth::id())
-                          ->whereIn('trangThai', ['Active', 'Pending']);
-
-        if ($request->filled('keyword')) {
-            $key = $request->keyword;
-            $query->where(function($q) use ($key) {
-                $q->where('maPM', 'like', "%$key%")
-                  ->orWhereHas('chiTietMuon.thietBi', function($q2) use ($key){
-                      $q2->where('tenTB', 'like', "%$key%");
-                  });
-            });
-        }
-
-        if ($request->filled('type')) {
-            if($request->type == 'qua_han') {
-                $query->where('ngayTraDuKien', '<', now())->where('trangThai', 'Active');
-            } else {
-                $query->where('trangThai', $request->type);
-            }
-        }
+                          ->where('trangThai', 'Active'); 
 
         $dangMuon = $query->with('chiTietMuon.thietBi')
                           ->orderBy('ngayTraDuKien', 'asc')
-                          ->paginate(10)
-                          ->withQueryString();
+                          ->paginate(10);
 
         return view('borrow.return', compact('dangMuon'));
     }
 
-    // 5. Xử lý Trả đồ hoặc Hủy lịch
+    // 5. XỬ LÝ: HỦY ĐƠN hoặc GỬI YÊU CẦU TRẢ (SỬA ĐỔI LOGIC)
     public function action(Request $request, $id)
     {
         try {
             DB::transaction(function () use ($id) {
-                // $id ở đây là UUID của PhieuMuon (do Route model binding hoặc truyền ID)
-                $phieu = PhieuMuon::where('id', $id) // Tìm theo UUID
-                            ->where('user_id', Auth::id()) // Check đúng chủ sở hữu
+                $phieu = PhieuMuon::where('id', $id)
+                            ->where('user_id', Auth::id())
                             ->firstOrFail();
 
-                // Trường hợp 1: Trả đồ (khi đang Active)
+                // TRƯỜNG HỢP 1: Đang mượn (Active) -> User bấm trả -> Chuyển thành Waiting_Return
                 if ($phieu->trangThai == 'Active') {
+                    
                     $phieu->update([
-                        'trangThai' => 'Closed',
-                        // Cần thêm cột ngayTraThucTe vào migration nếu chưa có, hoặc bỏ dòng này
-                        // 'ngayTraThucTe' => Carbon::now() 
+                        'trangThai' => 'Waiting_Return' // Chờ Admin nhận máy
                     ]);
                     
-                    // Trả trạng thái máy về Available
-                    // Lấy danh sách UUID thiết bị trong phiếu
-                    $thietBiIds = $phieu->chiTietMuon->pluck('thiet_bi_id');
-                    ThietBi::whereIn('id', $thietBiIds)->update(['tinhTrang' => 'Available']);
-                
-                // Trường hợp 2: Hủy lịch (khi đang Pending)
+                    // KHÔNG update thiết bị về Available. Việc này Admin làm sau khi kiểm tra máy.
+
+                // TRƯỜNG HỢP 2: Đang chờ duyệt (Pending) -> User muốn hủy -> Cancelled
                 } elseif ($phieu->trangThai == 'Pending') {
+                    
                     $phieu->update([
                         'trangThai' => 'Cancelled'
                     ]);
-                    // Không cần update bảng ThietBi vì máy chưa chuyển sang In_Use
+                    // Thiết bị vẫn an toàn vì chưa ai mượn
                 }
             });
 

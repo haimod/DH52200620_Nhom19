@@ -28,6 +28,12 @@ class AuthController extends Controller
                 'password' => $request->password
                 ] ) ) {
                 $request->session()->regenerate();
+
+            // Nếu là admin -> Vào trang Dashboard Admin
+                 if (Auth::user()->vaiTro === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
                 return redirect()->intended('/');
             }
 

@@ -10,14 +10,22 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeviceController; // Nhớ import ở đầu file
 use App\Http\Controllers\Admin\BorrowController as AdminBorrowController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SupportController as AdminSupportController; // Import Controller Hỗ trợ của Admin
+use App\Http\Controllers\NotificationController; // <--- 1. IMPORT CONTROLLER NÀY
 
 // --- Đăng nhập / Đăng xuất ---
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// --- 2. ROUTE XỬ LÝ THÔNG BÁO (MỚI THÊM) ---
+    Route::get('/notifications/mark-read/{id}', [NotificationController::class, 'markRead'])->name('notifications.markRead');
+    Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    // ------------------------------------------
+
+
 // --- Các route yêu cầu đăng nhập ---
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth','check.status'])->group(function () {
     // 1. Trang chủ
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -89,4 +97,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Route Quản lý nhân sự
     Route::resource('users', UserController::class);
+
+    
+    // [BƯỚC 3] Route chức năng Khóa/Mở khóa tài khoản (Toggle Status)
+    Route::post('users/{id}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
+        
+    
+    // --- TRUNG TÂM HỖ TRỢ (ADMIN) ---
+    // [FIX LỖI]: Trỏ đúng về AdminSupportController thay vì AdminBorrowController
+    // Đây là phần bạn đang cần: Giao diện Admin để xem và trả lời ticket
+    Route::get('/support', [AdminSupportController::class, 'index'])->name('support.index');     // Danh sách yêu cầu
+    Route::get('/support/{id}', [AdminSupportController::class, 'show'])->name('support.show');  // Xem chi tiết & Chat
+    Route::post('/support/{id}/reply', [AdminSupportController::class, 'reply'])->name('support.reply'); // Gửi phản hồi
+    Route::post('/support/{id}/close', [AdminSupportController::class, 'close'])->name('support.close'); // Đóng yêu cầu
+    Route::delete('/support/{id}', [AdminSupportController::class, 'destroy'])->name('support.destroy'); // Xóa yêu cầu
+
+// --- GỬI THÔNG BÁO TỪ ADMIN ---
+Route::post(
+    '/notifications/send', [DashboardController::class, 'sendNotification'])->name('notify.send');
 });

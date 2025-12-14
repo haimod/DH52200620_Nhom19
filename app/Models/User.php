@@ -23,9 +23,17 @@ protected $keyType = 'string';
      */
     protected $fillable = [
         'name',
+        'hoTen',
         'email',
         'password',
+        'maNV',
+        'trangThai',
         'avatar',
+        'tenDangNhap',
+         'phongBan',  
+        'vaiTro',
+        'soDienThoai',
+        
     ];
 
     /**

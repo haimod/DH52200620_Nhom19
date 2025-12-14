@@ -71,6 +71,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         // Các route quản lý khác sẽ viết tiếp ở đây...
 
+// xuất excel
+Route::get('thiet-bi/xuat-excel', [App\Http\Controllers\Admin\DeviceController::class, 'export'])
+    ->name('devices.export');
          // --- QUẢN LÝ THIẾT BỊ (MỚI) ---
     Route::get('/thiet-bi', [DeviceController::class, 'index'])->name('devices.index'); // Xem danh sách
     Route::post('/thiet-bi/them', [DeviceController::class, 'store'])->name('devices.store'); // Thêm mới
@@ -113,6 +116,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/support/{id}', [AdminSupportController::class, 'destroy'])->name('support.destroy'); // Xóa yêu cầu
 
 // --- GỬI THÔNG BÁO TỪ ADMIN ---
-Route::post(
-    '/notifications/send', [DashboardController::class, 'sendNotification'])->name('notify.send');
+Route::post(  '/notifications/send', [DashboardController::class, 'sendNotification'])->name('notify.send');
+
+// Trong nhóm route Admin, phần quản lý thiết bị
 });

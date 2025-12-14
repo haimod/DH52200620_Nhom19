@@ -73,7 +73,7 @@
                             </div>
                         </td>
                         <td>{{ $tb->maLoai }}</td>
-                        <td><small class="text-muted"><i class="fa-solid fa-location-dot me-1"></i>{{ $tb->maPhong ?? 'Kho' }}</small></td>
+                        <td><small class="text-muted"><i class="fa-solid fa-location-dot me-1"></i>{{ $tb->viTri ?? 'Kho Trung Tâm' }}</small></td>
                         <td>
                             @if($tb->tinhTrang == 'Available')
                                 @if($tb->lichDatTruoc->count() > 0)

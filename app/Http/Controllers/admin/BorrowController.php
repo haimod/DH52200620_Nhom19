@@ -74,7 +74,8 @@ class BorrowController extends Controller
                     // Cập nhật thiết bị: Đổi sang In_Use + Cập nhật vị trí người giữ
                     $device->update([
                         'tinhTrang' => 'In_Use',
-                        'viTri' => 'User: ' . $phieu->user->hoTen
+                       // Cập nhật vị trí thành tên Phòng ban của nhân viên (nếu chưa có phòng ban thì lấy tên người)
+                        'viTri' => $phieu->user->phongBan ?? ('User: ' . $phieu->user->hoTen),
                     ]);
                 }
 

@@ -23,7 +23,8 @@ class ThietBi extends Model
         'tinhTrang', 
         'hanBaoHanh', 
         'soSerial', 
-        'ngayMua'
+        'ngayMua',
+        'viTri',
     ];
 
     // --- QUAN HỆ ---

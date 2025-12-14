@@ -69,16 +69,14 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
             <div class="form-group">
-                <label for="username">Tên đăng nhập</label>
+               <label for="email">Địa chỉ Email</label>
                 <input 
-                    type="text" 
-                    id="username" 
-                    name="tenDangNhap" 
-                    required 
-                    autocomplete="username"
-                    placeholder="Nhập tên đăng nhập"
-                    value="{{ old('tenDangNhap') }}"> {{-- Giữ lại giá trị cũ khi nhập sai --}}
-            </div>
+                    type="email"          id="email" 
+                    name="email"          required 
+                    autocomplete="email"
+                    placeholder="Nhập email của bạn"
+                    value="{{ old('email') }}">
+                            </div>
 
             <div class="form-group">
                 <label for="password">Mật khẩu</label>
@@ -93,9 +91,7 @@
 
             <button type="submit" class="submit-btn">Đăng nhập</button>
 
-            <div class="forgot-password">
-                <a href="#">Quên mật khẩu?</a>
-            </div>
+            
         </form>
     </div>
 </body>

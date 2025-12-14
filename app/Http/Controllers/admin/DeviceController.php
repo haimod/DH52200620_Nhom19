@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ThietBi; 
+use App\Models\ThietBi;
+use SebastianBergmann\CodeCoverage\Report\Xml\Report;
 
 class DeviceController extends Controller
 {
@@ -94,4 +96,10 @@ class DeviceController extends Controller
         $device->delete();
         return back()->with('success', 'Đã xóa thiết bị thành công!');
     }
+
+  public function export()
+{
+    // Đặt tên file có kèm ngày giờ cho chuyên nghiệp
+    return Excel::download(new ReportExport, 'Bao-cao-tai-san-' . date('Y-m-d_H-i') . '.xlsx');
+}
 }

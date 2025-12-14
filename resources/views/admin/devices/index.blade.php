@@ -38,9 +38,16 @@
         </form>
         
         <!-- Nút Thêm Mới -->
-        <button class="btn btn-primary fw-bold shadow-sm" onclick="openModal('add')">
-            <i class="fa-solid fa-plus me-2"></i> Nhập kho mới
-        </button>
+       <div class="d-flex gap-2">
+    <a href="{{ route('admin.devices.export') }}" class="btn btn-success fw-bold shadow-sm text-white">
+        <i class="fa-solid fa-file-excel me-2"></i> Xuất Báo Cáo
+    </a>
+
+    <button class="btn btn-primary fw-bold shadow-sm" onclick="openModal('add')">
+        <i class="fa-solid fa-plus me-2"></i> Nhập kho mới
+    </button>
+</div>
+        
     </div>
 
     <!-- BẢNG DANH SÁCH -->
@@ -52,7 +59,7 @@
                         <tr>
                             <th class="ps-4">Mã Tài Sản</th>
                             <th>Tên Thiết bị</th>
-                            <!-- <th>Loại</th> -->
+                            <th>Vị trí</th>
                             <th>Số Serial</th>
                             <th>Tình trạng</th>
                             <th>Hạn Bảo Hành</th>
@@ -69,9 +76,11 @@
                                 <div class="fw-bold text-dark">{{ $d->tenTB }}</div>
                                 <div class="small text-muted">Mua: {{ $d->ngayMua ? date('d/m/Y', strtotime($d->ngayMua)) : '---' }}</div>
                             </td>
-                            <!-- <td>
-                                <span class="badge bg-light text-dark border">{{ $d->maLoai }}</span>
-                            </td> -->
+                            <td>
+                               <small class="text-muted fw-bold">
+                                    <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $d->viTri ?? 'Kho Trung Tâm' }}
+                                </small>
+                            </td>
                             <td>
                                 <span class="font-monospace small text-muted">{{ $d->soSerial ?? '---' }}</span>
                             </td>

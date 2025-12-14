@@ -27,13 +27,13 @@ class AuthController extends Controller
     {
         // Validate dữ liệu từ form
         $request->validate([
-            'tenDangNhap' => 'required|string',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
         // Thông tin đăng nhập
         $credentials = [
-            'tenDangNhap' => $request->tenDangNhap,
+            'email' => $request->email,
             'password' => $request->password,
         ];
 
@@ -66,10 +66,11 @@ class AuthController extends Controller
             return redirect()->intended(route('home'));
         }
 
-        // Đăng nhập thất bại
-        return back()->withErrors([
-            'tenDangNhap' => 'Tên đăng nhập hoặc mật khẩu không chính xác.',
-        ])->onlyInput('tenDangNhap');
+                // Đăng nhập thất bại
+         return back()->withErrors([
+            'email' => 'Email hoặc mật khẩu không chính xác.', // Đổi key để hiển thị lỗi đúng chỗ
+        ])->onlyInput('email');
+          
     }
 
     // 3. Xử lý đăng xuất

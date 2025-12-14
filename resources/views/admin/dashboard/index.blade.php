@@ -40,6 +40,13 @@
                 Chào Admin! Hệ thống có <span class="badge bg-danger rounded-pill">{{ $stats['open_tickets'] ?? 0 }} tin nhắn hỗ trợ</span> đang chờ xử lý.
             </p>
         </div>
+
+               <div class="d-flex gap-2">
+            <a href="{{ route('admin.devices.export') }}" class="btn btn-success fw-bold shadow-sm text-white">
+                <i class="fa-solid fa-file-excel me-2"></i> Xuất Báo Cáo
+            </a>
+   
+</div>
     </div>
 
     <!-- 1. THẺ THỐNG KÊ (Hàng trên cùng) -->

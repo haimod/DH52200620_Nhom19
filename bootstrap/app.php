@@ -3,7 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckAdmin; // 1. Import middleware của bạn
+use App\Http\Middleware\CheckAdmin;
+use App\Http\Middleware\CheckAccountStatus; // 1. Import middleware
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,10 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-           // 2. Đăng ký tên gọi tắt là 'admin'
+        // 2. Đăng ký alias (Gộp chung tất cả vào đây)
         $middleware->alias([
             'admin' => CheckAdmin::class,
+            'check.status' => CheckAccountStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,13 +1,24 @@
-@extends('layouts.main')
+{{-- 
+    LOGIC CHỌN LAYOUT TỰ ĐỘNG:
+    - Kiểm tra nếu vaiTro là Admin (bất kể hoa thường) -> Dùng layout Admin (có sidebar đen)
+    - Ngược lại -> Dùng layout Main (User - có header trắng)
+--}}
+@extends(
+    in_array(Auth::user()->vaiTro, ['Admin', 'admin', 'QuanTri', 'Super Admin']) 
+    ? 'layouts.admin' 
+    : 'layouts.main'
+)
+
 @section('title', 'Cài đặt hệ thống')
 
 @section('content')
-<div class="container-fluid py-4">
+{{-- Điều chỉnh padding tùy theo layout được chọn --}}
+<div class="{{ in_array(Auth::user()->vaiTro, ['Admin', 'admin', 'QuanTri', 'Super Admin']) ? 'container-fluid p-4' : 'main-content' }}">
 
     <h3 class="fw-bold text-primary mb-4">⚙️ Cài đặt tài khoản & Hệ thống</h3>
 
     <div class="row">
-        <!-- SIDEBAR MENU -->
+        <!-- SIDEBAR MENU (Bên trái) -->
         <div class="col-md-3 mb-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-3">
@@ -18,7 +29,9 @@
                         <button class="nav-link mb-2" id="tab-security" data-bs-toggle="pill" data-bs-target="#content-security" type="button">
                             <i class="fa-solid fa-lock me-2"></i> Đổi mật khẩu
                         </button>
-                        @if(auth()->user()->role == 'admin')
+                        
+                        {{-- Chỉ hiển thị Tab Cấu hình nếu là Admin --}}
+                        @if(in_array(Auth::user()->vaiTro, ['Admin', 'admin', 'QuanTri', 'Super Admin']))
                         <button class="nav-link mb-2" id="tab-system" data-bs-toggle="pill" data-bs-target="#content-system" type="button">
                             <i class="fa-solid fa-sliders me-2"></i> Cấu hình hệ thống
                         </button>
@@ -28,11 +41,11 @@
             </div>
         </div>
 
-        <!-- TAB CONTENT -->
+        <!-- TAB CONTENT (Bên phải) -->
         <div class="col-md-9">
             <div class="tab-content" id="settings-tabContent">
 
-                <!-- Hồ sơ cá nhân -->
+                <!-- 1. Hồ sơ cá nhân -->
                 <div class="tab-pane fade show active" id="content-profile" role="tabpanel">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-white py-3">
@@ -44,10 +57,10 @@
                                 <div class="d-flex align-items-center mb-4">
                                     <div class="me-3">
                                         @if(auth()->user()->avatar)
-                                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="rounded-circle" width="80" height="80" style="object-fit: cover;">
+                                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="rounded-circle border" width="80" height="80" style="object-fit: cover;">
                                         @else
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width:80px;height:80px;">
-                                                {{ substr(auth()->user()->hoTen ?? auth()->user()->name ?? 'U', 0, 1) }}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3 border" style="width:80px;height:80px;">
+                                                {{ substr(auth()->user()->hoTen ?? 'U', 0, 1) }}
                                             </div>
                                         @endif
                                     </div>
@@ -61,7 +74,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Họ và tên</label>
-                                        <input type="text" name="name" class="form-control" value="{{ auth()->user()->hoTen ?? auth()->user()->name }}" required>
+                                        <input type="text" name="hoTen" class="form-control" value="{{ auth()->user()->hoTen }}" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email</label>
@@ -69,11 +82,12 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Số điện thoại</label>
-                                        <input type="text" name="phone" class="form-control" value="{{ auth()->user()->soDienThoai ?? auth()->user()->sdt ?? auth()->user()->phone ?? '' }}">
+                                        <input type="text" name="soDienThoai" class="form-control" value="{{ auth()->user()->soDienThoai }}">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Phòng ban / Lớp</label>
-                                        <input type="text" class="form-control bg-light" value="{{ auth()->user()->phongBan ?? auth()->user()->department ?? '' }}" readonly>
+                                        <input type="text" class="form-control bg-light" value="{{ auth()->user()->phongBan }}" readonly>
+                                        <div class="form-text small">Liên hệ Admin nếu muốn đổi phòng ban.</div>
                                     </div>
                                 </div>
 
@@ -87,7 +101,7 @@
                     </div>
                 </div>
 
-                <!-- Đổi mật khẩu -->
+                <!-- 2. Đổi mật khẩu -->
                 <div class="tab-pane fade" id="content-security" role="tabpanel">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-white py-3">
@@ -141,41 +155,24 @@
                     </div>
                 </div>
 
-                <!-- Cấu hình hệ thống (Admin) -->
-                @if(auth()->user()->role == 'admin')
+                <!-- 3. Cấu hình hệ thống (Chỉ hiện cho Admin) -->
+                @if(in_array(Auth::user()->vaiTro, ['Admin', 'admin', 'QuanTri', 'Super Admin']))
                 <div class="tab-pane fade" id="content-system" role="tabpanel">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0 fw-bold">Cấu hình hệ thống</h5>
                         </div>
                         <div class="card-body p-4">
-                            <form action="{{ route('settings.updateSystem') }}" method="POST">
+                            {{-- Bạn cần tạo route settings.updateSystem sau --}}
+                            <form action="#" method="POST"> 
                                 @csrf
+                                <div class="alert alert-info">
+                                    <i class="fa-solid fa-circle-info me-1"></i> Chức năng đang được phát triển...
+                                </div>
+                                <!-- Ví dụ các setting -->
                                 <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" name="allow_borrow" id="allowBorrow" checked>
+                                    <input class="form-check-input" type="checkbox" id="allowBorrow" checked>
                                     <label class="form-check-label fw-bold" for="allowBorrow">Cho phép mượn thiết bị</label>
-                                </div>
-
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label>Số ngày mượn tối đa</label>
-                                        <input type="number" name="max_borrow_days" class="form-control" value="7">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label>Số thiết bị tối đa/ người</label>
-                                        <input type="number" name="max_devices_per_user" class="form-control" value="3">
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label>Email nhận thông báo (Admin)</label>
-                                    <input type="email" name="admin_email" class="form-control" value="admin@school.edu.vn">
-                                </div>
-
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fa-solid fa-check me-1"></i> Lưu cấu hình
-                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -197,15 +194,6 @@
 @if(session('error'))
 <div class="toast-notification error">
     <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ session('error') }}
-</div>
-@endif
-@if ($errors->any())
-<div class="toast-notification error">
-    <ul class="mb-0 ps-3">
-        @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
 </div>
 @endif
 
@@ -235,13 +223,12 @@
         if (input.type === "password") {
             input.type = "text";
             icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash'); // Đổi icon thành mắt gạch chéo
+            icon.classList.add('fa-eye-slash');
         } else {
             input.type = "password";
             icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye'); // Đổi lại icon mắt thường
+            icon.classList.add('fa-eye');
         }
     }
 </script>
-
 @endsection

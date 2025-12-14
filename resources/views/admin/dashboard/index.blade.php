@@ -1,4 +1,4 @@
-@extends('layouts.admin') 
+@extends('layouts.admin')
 @section('title', 'Admin Dashboard')
 @section('header_title', 'Tổng quan hệ thống')
 
@@ -16,9 +16,23 @@
 
         /* Avatar */
         .avatar-circle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white; }
+        
+        /* Toast notification */
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 10000; padding: 15px 25px; border-radius: 8px; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s; }
+        .toast-notification.success { background: #198754; }
+        .toast-notification.error { background: #dc3545; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* Clickable row */
+        .clickable-row { cursor: pointer; transition: background-color 0.1s; }
+        .clickable-row:hover { background-color: #f8f9fa; }
+        
+        /* Custom pagination size */
+        .pagination { justify-content: center; margin-bottom: 0; }
+        .page-item .page-link { font-size: 0.85rem; padding: 0.25rem 0.5rem; }
     </style>
 
-    <!-- Heading & Actions -->
+    <!-- Heading -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark m-0">Dashboard Quản trị</h2>
@@ -26,25 +40,17 @@
                 Chào Admin! Hệ thống có <span class="badge bg-danger rounded-pill">{{ $stats['open_tickets'] ?? 0 }} tin nhắn hỗ trợ</span> đang chờ xử lý.
             </p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-light border shadow-sm text-secondary bg-white">
-                <i class="fa-solid fa-file-export me-2"></i>Xuất Excel
-            </button>
-            <button class="btn btn-primary shadow-sm">
-                <i class="fa-solid fa-plus me-2"></i>Nhập tài sản mới
-            </button>
-        </div>
     </div>
 
-    <!-- 4 Thẻ Thống Kê (Stat Cards) -->
+    <!-- 1. THẺ THỐNG KÊ (Hàng trên cùng) -->
     <div class="row g-4 mb-4">
-        <!-- 1. Tổng Users -->
+        <!-- Tổng Users -->
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100 stat-card border-primary">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-uppercase text-muted small fw-bold">Tổng nhân sự</span>
-                        <i class="fa-solid fa-ellipsis text-muted"></i>
+                        <i class="fa-solid fa-users text-primary opacity-50"></i>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -58,14 +64,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- 2. Tổng Tài sản -->
+        <!-- Tổng Tài sản -->
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100 stat-card border-success">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-uppercase text-muted small fw-bold">Tổng thiết bị</span>
-                        <i class="fa-solid fa-ellipsis text-muted"></i>
+                        <i class="fa-solid fa-laptop text-success opacity-50"></i>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -79,20 +84,18 @@
                 </div>
             </div>
         </div>
-
-        <!-- 3. Yêu cầu Mượn/Trả (MỚI THÊM) -->
+        <!-- Mượn/Trả -->
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100 stat-card border-warning">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-uppercase text-muted small fw-bold">Yêu cầu Mượn/Trả</span>
-                        <a href="{{ route('admin.borrow.index') }}" class="text-muted"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        <span class="text-uppercase text-muted small fw-bold">Yêu cầu Mượn</span>
+                        <i class="fa-solid fa-file-signature text-warning opacity-50"></i>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <!-- Biến đếm số lượng chờ duyệt -->
                             <h2 class="fw-bold text-dark mb-0">{{ $stats['pending_borrows'] ?? 0 }}</h2>
-                            <small class="text-warning fw-bold"><i class="fa-regular fa-clock"></i> Đang chờ duyệt</small>
+                            <small class="text-warning fw-bold">Đang chờ duyệt</small>
                         </div>
                         <div class="bg-warning bg-opacity-10 text-warning rounded p-3">
                             <i class="fa-solid fa-file-signature fa-xl"></i>
@@ -101,14 +104,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- 4. Hỗ trợ (Open Tickets) -->
+        <!-- Hỗ trợ -->
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100 stat-card border-secondary">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-uppercase text-muted small fw-bold">Yêu cầu Hỗ trợ</span>
-                        <i class="fa-solid fa-ellipsis text-muted"></i>
+                        <i class="fa-solid fa-headset text-secondary opacity-50"></i>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -124,164 +126,172 @@
         </div>
     </div>
 
-    <!-- Layout chính: Bảng dữ liệu (8) & Widget (4) -->
+    <!-- 2. HÀNG GIỮA -->
     <div class="row g-4 mb-4">
-        <!-- Cột Trái: Bảng Hỗ trợ & Báo cáo từ Nhân viên -->
+        <!-- Cột Trái: Bảng Hỗ trợ -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-primary me-2">MỚI NHẤT</span>
-                        <h6 class="mb-0 fw-bold">Hỗ trợ & Báo cáo cần xử lý</h6>
-                    </div>
-                    <a href="{{ route('support.index') }}" class="text-decoration-none small fw-bold">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+                    <h6 class="mb-0 fw-bold text-primary">Hỗ trợ cần xử lý</h6>
+                    <a href="{{ route('admin.support.index') }}" class="text-decoration-none small fw-bold">Xem tất cả</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light small text-uppercase text-muted">
                             <tr>
                                 <th class="ps-4">Nhân viên</th>
-                                <th>Vấn đề / Yêu cầu</th>
+                                <th>Vấn đề</th>
                                 <th>Thời gian</th>
                                 <th>Trạng thái</th>
-                                <th class="text-end pe-4">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentTickets as $ticket)
-                            <tr>
+                            @forelse($recentTickets ?? [] as $ticket)
+                            {{-- Sử dụng data-href thay vì onclick để tránh lỗi cú pháp --}}
+                            <tr class="clickable-row" data-href="{{ route('admin.support.show', $ticket->id) }}">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        @if($ticket->user->avatar)
-                                            <img src="{{ asset('storage/' . $ticket->user->avatar) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                        {{-- Kiểm tra kỹ ticket->user --}}
+                                        @if($ticket->user)
+                                            @if($ticket->user->avatar)
+                                                <img src="{{ asset('storage/' . $ticket->user->avatar) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                            @else
+                                                <div class="avatar-circle bg-primary me-2">{{ substr($ticket->user->hoTen ?? 'U', 0, 1) }}</div>
+                                            @endif
+                                            <div>
+                                                <div class="fw-bold small">{{ $ticket->user->hoTen }}</div>
+                                                <div class="text-muted" style="font-size: 0.75rem">{{ $ticket->user->phongBan }}</div>
+                                            </div>
                                         @else
-                                            <div class="avatar-circle bg-primary me-2" style="width:35px;height:35px;font-size:12px;">{{ substr($ticket->user->hoTen ?? 'U', 0, 1) }}</div>
+                                            <div class="avatar-circle bg-secondary me-2">?</div>
+                                            <div>
+                                                <div class="fw-bold small text-muted">Người dùng đã xóa</div>
+                                                <div class="text-muted" style="font-size: 0.75rem">---</div>
+                                            </div>
                                         @endif
-                                        <div>
-                                            <div class="fw-bold">{{ $ticket->user->hoTen }}</div>
-                                            <div class="small text-muted">{{ $ticket->user->phongBan }}</div>
-                                        </div>
                                     </div>
                                 </td>
+                                <td><span class="fw-bold text-dark small">{{ Str::limit($ticket->subject, 40) }}</span></td>
+                                <td><span class="text-muted small" style="font-size: 0.75rem">{{ $ticket->created_at->diffForHumans() }}</span></td>
                                 <td>
-                                    <span class="fw-bold">{{ $ticket->subject }}</span>
-                                    <br>
-                                    <span class="small text-muted text-truncate" style="max-width: 250px; display: inline-block;">#ID: {{ $ticket->id }} - {{ $ticket->type }}</span>
-                                </td>
-                                <td>
-                                    <span class="small text-muted">{{ $ticket->created_at->diffForHumans() }}</span>
-                                </td>
-                                <td><span class="badge bg-warning text-dark">Đang xử lý</span></td>
-                                <td class="text-end pe-4">
-                                    <a href="#" class="btn btn-sm btn-light border me-1 text-primary"><i class="fa-solid fa-comment-dots"></i> Chat</a>
-                                    <button class="btn btn-sm btn-light border text-success"><i class="fa-solid fa-check"></i> Xong</button>
+                                    @if($ticket->status == 'pending')
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem">Chờ xử lý</span>
+                                    @else
+                                        <span class="badge bg-info text-dark" style="font-size: 0.7rem">Đang xử lý</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">Không có yêu cầu hỗ trợ nào mới.</td>
-                            </tr>
+                            <tr><td colspan="4" class="text-center py-4 text-muted small">Không có yêu cầu nào mới.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                <div class="card-footer bg-white py-2 border-top-0">
+                     @if(isset($recentTickets) && method_exists($recentTickets, 'links'))
+                         {{ $recentTickets->links() }}
+                     @endif
+                </div>
             </div>
         </div>
 
-        <!-- Cột Phải: Widget Tab (Thông báo / Cấp tài khoản) -->
+        <!-- Cột Phải: Gửi thông báo -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-3 pb-0">
-                    <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-bold small text-dark" id="notify-tab" data-bs-toggle="tab" data-bs-target="#notify" type="button" role="tab"><i class="fa-solid fa-bullhorn me-2"></i>Thông báo</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <!-- Active tab Cấp tài khoản lên trước để bạn dễ nhìn -->
-                            <button class="nav-link active fw-bold small text-primary" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab"><i class="fa-solid fa-user-plus me-2"></i>Cấp tài khoản</button>
-                        </li>
-                    </ul>
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-paper-plane me-2 text-primary"></i>Gửi thông báo</h6>
                 </div>
                 <div class="card-body">
-                    <div class="tab-content" id="adminTabsContent">
-                        
-                        <!-- TAB 1: GỬI THÔNG BÁO (Ẩn) -->
-                        <div class="tab-pane fade" id="notify" role="tabpanel">
-                            <p class="text-muted small mb-3">Gửi thông báo đến ứng dụng của toàn bộ nhân viên.</p>
-                            <form>
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm" placeholder="Tiêu đề (Vd: Bảo trì hệ thống)">
-                                </div>
-                                <div class="mb-2">
-                                    <textarea class="form-control form-control-sm" rows="3" placeholder="Nội dung thông báo..."></textarea>
-                                </div>
-                                <button type="button" class="btn btn-primary btn-sm w-100 fw-bold"><i class="fa-solid fa-paper-plane me-2"></i>Phát thông báo</button>
-                            </form>
+                    {{-- SỬA LỖI: Cập nhật route thành admin.notify.send --}}
+                    <form action="{{ route('admin.notify.send') }}" method="POST">
+                        @csrf
+                        <div class="mb-2">
+                            {{-- Thêm name="title" --}}
+                            <input type="text" name="title" class="form-control form-control-sm" placeholder="Tiêu đề..." required>
                         </div>
-
-                        <!-- TAB 2: CẤP TÀI KHOẢN -->
-                        <div class="tab-pane fade show active" id="account" role="tabpanel">
-                            <p class="text-muted small mb-3">Tạo tài khoản nhân viên mới vào hệ thống.</p>
-                            <form> <!-- Form tĩnh, chưa có action -->
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Họ và tên</label>
-                                        <input type="text" class="form-control form-control-sm" placeholder="Nhập họ tên...">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Mã Nhân viên</label>
-                                        <input type="text" class="form-control form-control-sm" placeholder="Vd: NV001">
-                                    </div>
-                                </div>
-                                
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Email</label>
-                                        <input type="email" class="form-control form-control-sm" placeholder="email@company.com">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Số điện thoại</label>
-                                        <input type="text" class="form-control form-control-sm" placeholder="09xxxxxxx">
-                                    </div>
-                                </div>
-
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Phòng ban</label>
-                                        <select class="form-select form-select-sm">
-                                            <option selected disabled>-- Chọn --</option>
-                                            <option>Kinh doanh</option>
-                                            <option>Kỹ thuật</option>
-                                            <option>Nhân sự</option>
-                                            <option>Hành chính</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Vai trò</label>
-                                        <select class="form-select form-select-sm">
-                                            <option value="NhanVien">Nhân viên</option>
-                                            <option value="admin">Quản trị viên</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold mb-1">Mật khẩu mặc định</label>
-                                    <input type="text" class="form-control form-control-sm bg-light" value="123456" readonly>
-                                    <div class="form-text small" style="font-size: 10px;">Nhân viên sẽ được yêu cầu đổi mật khẩu sau khi đăng nhập.</div>
-                                </div>
-
-                                <button type="button" class="btn btn-success btn-sm w-100 fw-bold py-2">
-                                    <i class="fa-solid fa-user-plus me-2"></i>Tạo tài khoản
-                                </button>
-                            </form>
+                        <div class="mb-2">
+                            {{-- Thêm name="content" --}}
+                            <textarea name="content" class="form-control form-control-sm" rows="3" placeholder="Nội dung..." required></textarea>
                         </div>
+                        {{-- Đổi type="submit" --}}
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Gửi ngay</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- 3. HÀNG DƯỚI: THỐNG KÊ TÀI SẢN -->
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-chart-pie me-2 text-success"></i>Tình trạng Tài sản</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-5 align-items-center">
+                        <div class="col-md-5 border-end text-center">
+                            <div class="d-flex justify-content-around mb-4">
+                                <div><h2 class="fw-bold text-warning mb-0">{{ $stats['in_use'] ?? 0 }}</h2><small class="text-muted fw-bold">ĐANG MƯỢN</small></div>
+                                <div><h2 class="fw-bold text-success mb-0">{{ $stats['available'] ?? 0 }}</h2><small class="text-muted fw-bold">TRONG KHO</small></div>
+                            </div>
+                            <!-- Thanh tỉ lệ (Sử dụng @style để fix lỗi IDE báo đỏ) -->
+                            <div class="progress" style="height: 10px;">
+                                @php
+                                    $total = ($stats['total_devices'] ?? 0) > 0 ? $stats['total_devices'] : 1;
+                                    $usePercent = ($stats['in_use'] / $total) * 100;
+                                    $availPercent = ($stats['available'] / $total) * 100;
+                                    $brokenPercent = ($stats['broken'] / $total) * 100;
+                                @endphp
+                                <div class="progress-bar bg-warning" role="progressbar" @style(['width: ' . $usePercent . '%']) title="Đang mượn"></div>
+                                <div class="progress-bar bg-success" role="progressbar" @style(['width: ' . $availPercent . '%']) title="Sẵn sàng"></div>
+                                <div class="progress-bar bg-danger" role="progressbar" @style(['width: ' . $brokenPercent . '%']) title="Hỏng"></div>
+                            </div>
+                            <div class="mt-2 text-center small text-muted">
+                                <span class="me-3"><i class="fa-solid fa-circle text-warning small me-1"></i>Đang mượn</span>
+                                <span class="me-3"><i class="fa-solid fa-circle text-success small me-1"></i>Trong kho</span>
+                                <span><i class="fa-solid fa-circle text-danger small me-1"></i>Hỏng ({{ $stats['broken'] ?? 0 }})</span>
+                            </div>
+                        </div>
+                        <div class="col-md-7 ps-md-5">
+                            <div class="row g-4">
+                                <div class="col-sm-6">
+                                    <h6 class="text-muted small fw-bold mb-3">HOẠT ĐỘNG</h6>
+                                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Hôm nay</span><span class="fw-bold">{{ $activity['today'] ?? 0 }}</span></div>
+                                    <div class="d-flex justify-content-between"><span class="text-muted">Tháng này</span><span class="fw-bold">{{ $activity['month'] ?? 0 }}</span></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <h6 class="text-muted small fw-bold mb-3 text-danger">CẢNH BÁO</h6>
+                                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Sắp trễ</span><span class="badge bg-warning text-dark">{{ isset($nearDeadline) ? $nearDeadline->count() : 0 }}</span></div>
+                                    <div class="d-flex justify-content-between"><span class="text-danger">Quá hạn</span><span class="badge bg-danger">{{ isset($overdue) ? $overdue->count() : 0 }}</span></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- TOAST -->
+    @if(session('success')) <div class="toast-notification success"><i class="fa-solid fa-check-circle me-1"></i> {{ session('success') }}</div> @endif
+    @if(session('error')) <div class="toast-notification error"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ session('error') }}</div> @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => { document.querySelectorAll('.toast-notification').forEach(el => el.style.display='none'); }, 4000);
+        
+        // Xử lý click dòng bảng an toàn
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (!e.target.closest('a') && !e.target.closest('button')) {
+                    window.location.href = this.dataset.href;
+                }
+            });
+        });
+    });
+</script>
 @endsection

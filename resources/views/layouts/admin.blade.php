@@ -92,7 +92,10 @@
             </a>
 
             <small class="text-uppercase text-muted fw-bold px-4 mb-2 mt-3 d-block" style="font-size: 11px;">Hệ thống</small>
-            <a href="{{ route('support.index') }}" class="nav-link"><i class="fa-solid fa-headset"></i> Trung tâm hỗ trợ</a>
+
+            <a href="{{ route('admin.support.index') }}" class="nav-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-headset"></i> Trung tâm hỗ trợ
+            </a>
             <a href="{{ route('settings.index') }}" class="nav-link"><i class="fa-solid fa-sliders"></i> Cấu hình</a>
         </div>
     </div>
@@ -106,10 +109,7 @@
             
             <div class="d-flex align-items-center gap-3">
                 <!-- Nút thông báo -->
-                <button class="btn btn-light rounded-circle position-relative border me-1">
-                    <i class="fa-regular fa-bell text-secondary"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                </button>
+               
 
                 <div class="vr h-50 my-auto text-secondary"></div>
 
@@ -143,7 +143,7 @@
         @yield('content')
         
     </div>
-
+@include('layouts.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @yield('scripts')

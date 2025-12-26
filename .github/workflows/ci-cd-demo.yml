@@ -15,7 +15,7 @@ jobs:
     - name: 2. Cài đặt môi trường PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.3'
 
     - name: 3. Cài đặt thư viện (Composer Install)
       run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist

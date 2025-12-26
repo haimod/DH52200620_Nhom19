@@ -81,7 +81,7 @@ Route::get('thiet-bi/xuat-excel', [App\Http\Controllers\Admin\DeviceController::
     // ROUTE UPDATE (QUAN TRỌNG)
     Route::put('/thiet-bi/cap-nhat/{id}', [DeviceController::class, 'update'])->name('devices.update');
 
-
+ [Lỗi]
 
 
 

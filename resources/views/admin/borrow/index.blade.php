@@ -62,7 +62,13 @@
                                     @endforeach
                                 </td>
                                 <td>
-                                    <div class="small mb-1">📅 {{ date('d/m/Y', strtotime($item->ngayMuon)) }} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> {{ date('d/m/Y', strtotime($item->ngayTraDuKien)) }}</div>
+                                    <!-- <div class="small mb-1">📅 {{ date('d/m/Y', strtotime($item->ngayMuon)) }} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> {{ date('d/m/Y', strtotime($item->ngayTraDuKien)) }}</div> -->
+                                                                    <div class="small mb-1">
+                                    <i class="fa-regular fa-clock text-primary me-1"></i> 
+                                    <strong>{{ date('H:i', strtotime($item->ngayMuon)) }}</strong> {{ date('d/m/Y', strtotime($item->ngayMuon)) }}
+                                    <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> 
+                                    <strong>{{ date('H:i', strtotime($item->ngayTraDuKien)) }}</strong> {{ date('d/m/Y', strtotime($item->ngayTraDuKien)) }}
+                                </div>
                                     <div class="text-muted small fst-italic">"{{ $item->ghiChu }}"</div>
                                 </td>
                                 <td class="text-end pe-4">

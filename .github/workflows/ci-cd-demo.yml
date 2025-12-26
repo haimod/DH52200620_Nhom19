@@ -1,0 +1,29 @@
+name: CI-CD Normal Demo
+
+on:
+  push:
+    branches: [ "main" ] # Tự động chạy khi bạn push code lên nhánh main
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu của GitHub
+
+    steps:
+    - name: 1. Lấy code từ GitHub
+      uses: actions/checkout@v3
+
+    - name: 2. Cài đặt môi trường PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    - name: 3. Cài đặt thư viện (Composer Install)
+      run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    - name: 4. Chạy kiểm tra cú pháp (Lint)
+      run: php -l $(find . -name "*.php" -not -path "./vendor/*")
+
+    - name: 5. Build Docker Image (Đóng gói)
+      run: |
+        docker build -t laravel-demo-image:latest .
+        echo "Build thành công!"
